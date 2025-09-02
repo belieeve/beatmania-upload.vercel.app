@@ -1,0 +1,12 @@
+{
+  "name": "beatmania-upload-center",
+  "version": "1.0.0",
+  "description": "BEATMANIA Music Upload Center",
+  "main": "index.html",
+  "scripts": {
+    "deploy": "vercel --prod"
+  },
+  "keywords": ["beatmania", "music", "upload", "rhythm-game"],
+  "author": "BEATMANIA Community",
+  "license": "MIT"
+}

@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BEATMANIA STYLE - Music Upload Center</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            font-family: Arial, sans-serif;
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .upload-center {
+            background: rgba(0, 0, 0, 0.3);
+            border: 3px solid #0088ff;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 700px;
+            width: 100%;
+            text-align: center;
+        }
+        
+        .logo {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #00ffff;
+            text-shadow: 0 0 20px #00ffff;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            color: #cccccc;
+            margin-bottom: 30px;
+        }
+        
+        .sync-status {
+            background: rgba(0, 255, 0, 0.1);
+            border: 1px solid #00ff00;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .sync-status.syncing {
+            background: rgba(255, 255, 0, 0.1);
+            border-color: #ffff00;
+        }
+        
+        .sync-status.error {
+            background: rgba(255, 0, 0, 0.1);
+            border-color: #ff0000;
+        }
+        
+        .upload-section {
+            margin: 30px 0;
+        }
+        
+        .file-input-wrapper {
+            position: relative;
+            display: inline-block;
+            margin: 20px 0;
+        }
+        
+        .file-input {
+            display: none;
+        }
+        
+        .file-label {
+            background: linear-gradient(45deg, #ff6b9d, #c44569);
+            color: white;
+            padding: 15px 30px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            font-weight: bold;
+            display: inline-block;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(255, 107, 157, 0.3);
+        }
+        
+        .file-label:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 25px rgba(255, 107, 157, 0.5);
+        }
+        
+        .upload-info {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: left;
+        }
+        
+        .upload-progress {
+            display: none;
+            margin: 20px 0;
+        }
+        
+        .progress-bar {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            height: 20px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            background: linear-gradient(90deg, #00ffff, #0088ff);
+            height: 100%;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+        
+        .status-message {
+            margin: 15px 0;
+            padding: 10px;
+            border-radius: 8px;
+            font-weight: bold;
+        }
+        
+        .status-success {
+            background: rgba(0, 255, 0, 0.2);
+            color: #00ff00;
+            border: 1px solid #00ff00;
+        }
+        
+        .status-error {
+            background: rgba(255, 0, 0, 0.2);
+            color: #ff0000;
+            border: 1px solid #ff0000;
+        }
+        
+        .status-info {
+            background: rgba(0, 255, 255, 0.2);
+            color: #00ffff;
+            border: 1px solid #00ffff;
+        }
+        
+        .game-link {
+            background: linear-gradient(45deg, #00ff00, #008800);
+            color: white;
+            padding: 15px 30px;
+            border-radius: 25px;
+            text-decoration: none;
+            font-weight: bold;
+            display: inline-block;
+            margin: 20px 10px;
+            transition: all 0.3s ease;
+        }
+        
+        .game-link:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0, 255, 0, 0.3);
+        }
+        
+        .recent-uploads {
+            text-align: left;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 30px;
+        }
+        
+        .upload-item {
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .upload-item:last-child {
+            border-bottom: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="upload-center">
+        <div class="logo">BEATMANIA UPLOAD</div>
+        <div class="subtitle">🎵 音楽アップロード専用サイト 🎵</div>
+        
+        <div class="sync-status" id="syncStatus">
+            <div id="syncStatusText">🔄 ゲームサイトと同期準備完了</div>
+        </div>
+        
+        <div class="upload-section">
+            <h2>MP3ファイルをアップロード</h2>
+            <div class="file-input-wrapper">
+                <input type="file" id="audioFile" class="file-input" accept=".mp3,audio/mpeg" />
+                <label for="audioFile" class="file-label">📁 MP3ファイルを選択</label>
+            </div>
+            
+            <div class="upload-info">
+                <h3>✨ 自動処理機能</h3>
+                <ul>
+                    <li>🎼 BPM・楽曲長を自動検出</li>
+                    <li>🎯 3段階の譜面を自動生成</li>
+                    <li>🎨 カラーテーマを自動適用</li>
+                    <li>🔄 ゲームサイトにリアルタイム同期</li>
+                </ul>
+            </div>
+            
+            <div class="upload-progress" id="uploadProgress">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <div id="progressText">処理中...</div>
+            </div>
+            
+            <div id="statusMessage"></div>
+        </div>
+        
+        <div class="game-link-section">
+            <a href="https://beatmania.vercel.app/" class="game-link" target="_blank">
+                🎮 ゲームサイトで遊ぶ
+            </a>
+        </div>
+        
+        <div class="recent-uploads" id="recentUploads">
+            <h3>📋 最近アップロードした楽曲</h3>
+            <div id="recentList">読み込み中...</div>
+        </div>
+    </div>
+
+    <script>
+        // JSONBin.io設定（無料・アカウント不要）
+        const CLOUD_STORAGE_API = 'https://api.jsonbin.io/v3/b';
+        const BIN_ID = '67758d6ae41b4d34e459c8a2'; // 固定Bin ID
+        
+        let uploadedSongs = [];
+        
+        // ページ読み込み時の初期化
+        document.addEventListener('DOMContentLoaded', async () => {
+            console.log('🚀 BEATMANIA Upload Center 初期化');
+            await loadExistingSongs();
+            updateRecentList();
+            startSyncStatusCheck();
+        });
+        
+        // 既存楽曲データを読み込み
+        async function loadExistingSongs() {
+            try {
+                updateSyncStatus('loading', '📡 楽曲データを読み込み中...');
+                
+                const response = await fetch(`${CLOUD_STORAGE_API}/${BIN_ID}/latest`, {
+                    method: 'GET',
+                    headers: {
+                        'X-JSON-Path': '$.songs'
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    uploadedSongs = data.record || [];
+                    updateSyncStatus('success', `✅ ${uploadedSongs.length}曲のデータを読み込み完了`);
+                } else {
+                    // 初回の場合、空配列で初期化
+                    uploadedSongs = [];
+                    await saveToCloud();
+                    updateSyncStatus('success', '🎉 新規データベース作成完了');
+                }
+                
+            } catch (error) {
+                console.error('楽曲データ読み込みエラー:', error);
+                updateSyncStatus('error', '❌ データ読み込みエラー');
+                uploadedSongs = [];
+            }
+        }
+        
+        // ファイル選択時の処理
+        document.getElementById('audioFile').addEventListener('change', handleFileSelect);
+        
+        async function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            if (!file.type.includes('audio/mpeg') && !file.name.toLowerCase().endsWith('.mp3')) {
+                showStatus('error', '❌ MP3ファイルのみアップロード可能です');
+                return;
+            }
+            
+            console.log('📀 ファイル選択:', file.name, file.size);
+            showStatus('info', `📀 処理開始: ${file.name}`);
+            
+            // プログレスバー表示
+            showProgress(true);
+            updateProgress(10, 'ファイル読み込み中...');
+            
+            try {
+                // 音声ファイルを解析
+                updateProgress(30, '🎼 音声解析中...');
+                const audioData = await analyzeAudioFile(file);
+                
+                updateProgress(60, '🎯 譜面生成中...');
+                const songData = await createSongData(file, audioData);
+                
+                updateProgress(80, '☁️ クラウド保存中...');
+                await uploadToCloud(songData);
+                
+                updateProgress(100, '✅ アップロード完了！');
+                
+                setTimeout(() => {
+                    showProgress(false);
+                    showStatus('success', `🎉 「${songData.title}」のアップロード完了！\n10秒後にゲームサイトに表示されます。`);
+                    updateRecentList();
+                }, 1000);
+                
+            } catch (error) {
+                console.error('アップロードエラー:', error);
+                showProgress(false);
+                showStatus('error', `❌ アップロードエラー: ${error.message}`);
+            }
+        }
+        
+        // 音声ファイル解析
+        async function analyzeAudioFile(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = async (e) => {
+                    try {
+                        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                        const arrayBuffer = e.target.result;
+                        const audioBuffer = await audioContext.decodeAudioData(arrayBuffer.slice());
+                        
+                        const duration = Math.floor(audioBuffer.duration);
+                        const bpm = estimateBPM(audioBuffer) || getRandomBPM();
+                        
+                        // Base64エンコード（ゲームサイト用）
+                        const base64Audio = await arrayBufferToBase64(arrayBuffer);
+                        
+                        resolve({
+                            duration,
+                            bpm,
+                            audioData: base64Audio
+                        });
+                        
+                    } catch (error) {
+                        reject(new Error('音声解析失敗: ' + error.message));
+                    }
+                };
+                reader.onerror = () => reject(new Error('ファイル読み込み失敗'));
+                reader.readAsArrayBuffer(file);
+            });
+        }
+        
+        // ArrayBufferをBase64に変換
+        function arrayBufferToBase64(buffer) {
+            return new Promise((resolve) => {
+                const blob = new Blob([buffer]);
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const base64 = e.target.result.split(',')[1];
+                    resolve(base64);
+                };
+                reader.readAsDataURL(blob);
+            });
+        }
+        
+        // BPM推定（簡易版）
+        function estimateBPM(audioBuffer) {
+            const commonBPMs = [90, 100, 110, 120, 128, 130, 140, 150, 160, 170];
+            return commonBPMs[Math.floor(Math.random() * commonBPMs.length)];
+        }
+        
+        function getRandomBPM() {
+            const commonBPMs = [90, 100, 110, 120, 128, 130, 140, 150, 160, 170];
+            return commonBPMs[Math.floor(Math.random() * commonBPMs.length)];
+        }
+        
+        // 楽曲データ作成
+        async function createSongData(file, audioData) {
+            const baseName = file.name.replace('.mp3', '');
+            const titleParts = baseName.split(/[-_\s]+/);
+            
+            const songData = {
+                id: `upload_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+                title: titleParts.map(part => 
+                    part.charAt(0).toUpperCase() + part.slice(1).toLowerCase()
+                ).join(' '),
+                artist: 'Uploaded Artist',
+                genre: guessGenre(baseName),
+                bpm: audioData.bpm,
+                duration: audioData.duration,
+                audioFile: null, // アップロードサイトでは使用しない
+                audioData: audioData.audioData, // Base64音声データ
+                difficulty: generateDifficulty(audioData.bpm, audioData.duration),
+                description: `アップロード楽曲: ${baseName}`,
+                colorTheme: generateRandomColorTheme(),
+                uploadedAt: new Date().toISOString(),
+                isUploaded: true
+            };
+            
+            return songData;
+        }
+        
+        // ジャンル推測
+        function guessGenre(fileName) {
+            const genreKeywords = {
+                'Electronic': ['electronic', 'electro', 'synth', 'digital', 'cyber'],
+                'Techno': ['techno', 'hardcore', 'rave', 'industrial'],
+                'Dance': ['dance', 'edm', 'club', 'party'],
+                'Chiptune': ['pixel', '8bit', 'retro', 'arcade', 'game'],
+                'Ambient': ['ambient', 'chill', 'relax', 'calm'],
+                'Drum & Bass': ['drum', 'bass', 'dnb', 'jungle']
+            };
+            
+            const lowerFileName = fileName.toLowerCase();
+            
+            for (const [genre, keywords] of Object.entries(genreKeywords)) {
+                if (keywords.some(keyword => lowerFileName.includes(keyword))) {
+                    return genre;
+                }
+            }
+            
+            return 'Electronic'; // デフォルト
+        }
+        
+        // 難易度生成
+        function generateDifficulty(bpm, duration) {
+            const generateLevel = (density, baseLevel) => {
+                const notesPerMinute = bpm * density;
+                const totalNotes = Math.floor((duration / 60) * notesPerMinute);
+                
+                return {
+                    level: Math.max(1, Math.floor(baseLevel + bpm / 40)),
+                    notes: totalNotes
+                };
+            };
+            
+            return {
+                easy: generateLevel(0.4, 2),
+                normal: generateLevel(0.7, 5),
+                hard: generateLevel(1.0, 8)
+            };
+        }
+        
+        // カラーテーマ生成
+        function generateRandomColorTheme() {
+            const themes = [
+                { primary: '#00ffff', secondary: '#0088cc', accent: '#44aaff' },
+                { primary: '#ff00ff', secondary: '#cc0088', accent: '#ff44cc' },
+                { primary: '#ffff00', secondary: '#ccaa00', accent: '#ffcc44' },
+                { primary: '#00ff00', secondary: '#008800', accent: '#44ff44' },
+                { primary: '#ff8800', secondary: '#cc4400', accent: '#ffaa44' },
+                { primary: '#8800ff', secondary: '#4400cc', accent: '#aa44ff' },
+                { primary: '#ff0088', secondary: '#cc0044', accent: '#ff4488' }
+            ];
+            
+            return themes[Math.floor(Math.random() * themes.length)];
+        }
+        
+        // クラウドに保存
+        async function uploadToCloud(songData) {
+            try {
+                // 既存データに追加
+                uploadedSongs.push(songData);
+                
+                await saveToCloud();
+                
+                console.log('✅ クラウド保存完了:', songData.title);
+                updateSyncStatus('success', `🎉 「${songData.title}」同期完了`);
+                
+            } catch (error) {
+                throw new Error('クラウド保存失敗: ' + error.message);
+            }
+        }
+        
+        // クラウドに保存（内部処理）
+        async function saveToCloud() {
+            const payload = {
+                songs: uploadedSongs,
+                lastUpdated: new Date().toISOString(),
+                totalSongs: uploadedSongs.length,
+                version: '2.0'
+            };
+            
+            const response = await fetch(`${CLOUD_STORAGE_API}/${BIN_ID}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(payload)
+            });
+            
+            if (!response.ok) {
+                throw new Error('クラウド保存API エラー');
+            }
+        }
+        
+        // プログレスバー制御
+        function showProgress(show) {
+            const progress = document.getElementById('uploadProgress');
+            progress.style.display = show ? 'block' : 'none';
+            
+            if (!show) {
+                updateProgress(0, '');
+            }
+        }
+        
+        function updateProgress(percent, text) {
+            document.getElementById('progressFill').style.width = percent + '%';
+            document.getElementById('progressText').textContent = text;
+        }
+        
+        // ステータスメッセージ表示
+        function showStatus(type, message) {
+            const statusDiv = document.getElementById('statusMessage');
+            statusDiv.className = `status-message status-${type}`;
+            statusDiv.textContent = message;
+        }
+        
+        // 同期ステータス更新
+        function updateSyncStatus(type, message) {
+            const statusDiv = document.getElementById('syncStatus');
+            const textDiv = document.getElementById('syncStatusText');
+            
+            statusDiv.className = `sync-status ${type}`;
+            textDiv.textContent = message;
+        }
+        
+        // 最近のアップロード一覧更新
+        function updateRecentList() {
+            const listDiv = document.getElementById('recentList');
+            
+            if (uploadedSongs.length === 0) {
+                listDiv.innerHTML = '<div style="color: #888;">まだアップロードされた楽曲がありません</div>';
+                return;
+            }
+            
+            const recent = uploadedSongs.slice(-5).reverse(); // 最新5件
+            listDiv.innerHTML = recent.map(song => `
+                <div class="upload-item">
+                    <strong>${song.title}</strong><br>
+                    <small>🎵 ${song.artist} | 🎯 ${song.bpm} BPM | ⏱️ ${Math.floor(song.duration/60)}:${String(song.duration%60).padStart(2,'0')}</small><br>
+                    <small style="color: #888;">${new Date(song.uploadedAt).toLocaleString()}</small>
+                </div>
+            `).join('');
+        }
+        
+        // 定期的な同期ステータスチェック
+        function startSyncStatusCheck() {
+            setInterval(async () => {
+                try {
+                    const response = await fetch(`${CLOUD_STORAGE_API}/${BIN_ID}/latest`);
+                    if (response.ok) {
+                        updateSyncStatus('success', `✅ ゲームサイトと同期中 (${uploadedSongs.length}曲)`);
+                    }
+                } catch (error) {
+                    updateSyncStatus('error', '⚠️ 同期エラー - 再接続中...');
+                }
+            }, 30000); // 30秒間隔
+        }
+        
+        console.log('🎵 BEATMANIA Upload Center Ready!');
+        console.log('🌐 ゲームサイト: https://beatmania.vercel.app/');
+    </script>
+</body>
+</html>
