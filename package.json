@@ -4,7 +4,17 @@
   "description": "BEATMANIA Music Upload Center",
   "main": "index.html",
   "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
     "deploy": "vercel --prod"
+  },
+  "dependencies": {
+    "next": "^14.0.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0"
   },
   "keywords": ["beatmania", "music", "upload", "rhythm-game"],
   "author": "BEATMANIA Community",
