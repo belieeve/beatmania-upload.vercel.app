@@ -231,9 +231,9 @@
     </div>
 
     <script>
-        // JSONBin.io設定（無料・アカウント不要）
-        const CLOUD_STORAGE_API = 'https://api.jsonbin.io/v3/b';
-        const BIN_ID = '67758d6ae41b4d34e459c8a2'; // 固定Bin ID
+        // JSONStorage.net設定（無料・アカウント不要・CORS対応）
+        const CLOUD_STORAGE_API = 'https://api.jsonstorage.net/v1/json';
+        const STORAGE_KEY = 'beatmania-shared-songs-v2'; // 固定ストレージキー
         
         let uploadedSongs = [];
         
@@ -250,28 +250,36 @@
             try {
                 updateSyncStatus('loading', '📡 楽曲データを読み込み中...');
                 
-                const response = await fetch(`${CLOUD_STORAGE_API}/${BIN_ID}/latest`, {
+                const response = await fetch(`${CLOUD_STORAGE_API}/${STORAGE_KEY}`, {
                     method: 'GET',
                     headers: {
-                        'X-JSON-Path': '$.songs'
+                        'Content-Type': 'application/json'
                     }
                 });
                 
                 if (response.ok) {
                     const data = await response.json();
-                    uploadedSongs = data.record || [];
+                    uploadedSongs = data.songs || [];
                     updateSyncStatus('success', `✅ ${uploadedSongs.length}曲のデータを読み込み完了`);
-                } else {
+                } else if (response.status === 404) {
                     // 初回の場合、空配列で初期化
                     uploadedSongs = [];
                     await saveToCloud();
                     updateSyncStatus('success', '🎉 新規データベース作成完了');
+                } else {
+                    throw new Error(`API Error: ${response.status}`);
                 }
                 
             } catch (error) {
                 console.error('楽曲データ読み込みエラー:', error);
-                updateSyncStatus('error', '❌ データ読み込みエラー');
+                updateSyncStatus('info', '🆕 新規データベースを作成中...');
                 uploadedSongs = [];
+                try {
+                    await saveToCloud();
+                    updateSyncStatus('success', '✅ 新規データベース作成完了');
+                } catch (saveError) {
+                    updateSyncStatus('error', '❌ データベース作成エラー');
+                }
             }
         }
         
@@ -482,7 +490,7 @@
                 version: '2.0'
             };
             
-            const response = await fetch(`${CLOUD_STORAGE_API}/${BIN_ID}`, {
+            const response = await fetch(`${CLOUD_STORAGE_API}/${STORAGE_KEY}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -491,8 +499,11 @@
             });
             
             if (!response.ok) {
-                throw new Error('クラウド保存API エラー');
+                const errorText = await response.text();
+                throw new Error(`クラウド保存API エラー: ${response.status} - ${errorText}`);
             }
+            
+            console.log('✅ クラウド保存成功');
         }
         
         // プログレスバー制御
@@ -549,7 +560,12 @@
         function startSyncStatusCheck() {
             setInterval(async () => {
                 try {
-                    const response = await fetch(`${CLOUD_STORAGE_API}/${BIN_ID}/latest`);
+                    const response = await fetch(`${CLOUD_STORAGE_API}/${STORAGE_KEY}`, {
+                        method: 'GET',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    });
                     if (response.ok) {
                         updateSyncStatus('success', `✅ ゲームサイトと同期中 (${uploadedSongs.length}曲)`);
                     }
